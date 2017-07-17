@@ -2,6 +2,11 @@
 Testing out making a basic server with Node \
 [Basic Tutorial Here](https://zellwk.com/blog/crud-express-mongodb/)
 
+## Basic Usage
+* **Dev**: ***npm run start*** - Starts Dev server with nodemon and babel
+* **Build**: ***npm run build*** - Transpiles code for distribution 
+
+
 ## Packages Used
 * Express 
     * Takes care of a bunch of setting up the server and gives access to the usual ***app***
@@ -16,9 +21,5 @@ Testing out making a basic server with Node \
          which starts server with nodemon
 * Body-Parser
     * Middleware that handles data that comes in with the request and makes it accessible through ***req.body***
-    
-    
-    Reading state information... Done
-    W: Duplicate sources.list entry http://mirrordirector.raspbian.org/raspbian/ jessie/main armhf Packages (/var/lib/apt/lists/mirrordirector.raspbian.org_raspbian_dists_jessie_main_binary-armhf_Packages)
-    W: Duplicate sources.list entry http://mirrordirector.raspbian.org/raspbian/ jessie/contrib armhf Packages (/var/lib/apt/lists/mirrordirector.raspbian.org_raspbian_dists_jessie_contrib_binary-armhf_Packages)
-    W: Duplicate sources.list entry http://mirrordirector.raspbian.org/raspbian/ jessie/non-free armhf Packages (/var/lib/apt/lists/mirrordirector.raspbian.org_raspbian_dists_jessie_non-free_binary-armhf_Packages)
+* Babel
+    * Transpiles ES6 to ES5 
