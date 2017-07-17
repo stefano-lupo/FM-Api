@@ -1,26 +1,32 @@
-const express = require('express');
+// Import Modules
+import express from 'express';
+import mongoose from 'mongoose';
+import bodyParser from 'body-parser';
 const app = express();
-const bodyParser = require('body-parser');
 
-const MongoClient = require('mongodb').MongoClient;
-let db;
-MongoClient.connect('mongodb://localhost/nodeServerDB', (err, database) => {
-  if(err) {
-    return console.log(err);
-  }
 
-  db = database;
+// Import Controllers
+import UserController from './controllers/UserController';
+
+// Initialize Server
+mongoose.connect('mongodb://localhost/nodeServerDB');
+let db = mongoose.connection;
+db.on('error', console.error.bind(console, 'connection error:'));
+db.once('open', function() {
+  console.log("Connected to Database");
   app.listen(3000, function() {
     console.log('Listening on port 3000');
   })
 });
+
 
 // Register middleware
 // NOTE: Must be done before CRUD handlers
 app.use(bodyParser.urlencoded({extended: true}));
 
 
-// Routes
+
+// Define Routes
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/public/');
 });
@@ -35,9 +41,4 @@ app.post('/user', (req, res) => {
   })
 });
 
-// Get users
-app.get('/users', (req, res) => {
-  db.collection('users').find().toArray(function(err, results) {
-    res.send(results);
-  })
-});
+app.get('/users', (req,res) => UserController.getUsers(req, res));
