@@ -22,7 +22,7 @@ const createNewUser = (req, res) => {
       User.create(user, function(err){
         if(err) return console.log(err);
       });
-      res.json(genericResponse(true, "User successfully created"));
+      res.json(genericResponse("User successfully created"));
     }
   })
 };
@@ -32,6 +32,6 @@ module.exports = {
   createNewUser
 };
 
-const genericResponse = (success = false, message = "An error has occurred") => {
-  return {success, message};
+const genericResponse = (message = "An error has occurred") => {
+  return {message};
 };

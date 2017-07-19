@@ -7,6 +7,7 @@ const app = express();
 
 // Import Controllers
 import UserController from './controllers/UserController';
+import CategoryController from './controllers/CategoryController';
 
 // Initialize the DB
 mongoose.connect('mongodb://localhost/nodeServerDB');
@@ -34,4 +35,5 @@ app.get('/', (req, res) => {
 });
 
 app.post('/user', (req, res) => UserController.createNewUser(req, res));
-app.get('/users', (req,res) => UserController.getUsers(req, res));
+app.get('/users', (req, res) => UserController.getUsers(req, res));
+app.get('/categories', (req, res) => CategoryController.getCategories(req, res));
