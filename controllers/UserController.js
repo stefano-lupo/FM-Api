@@ -14,14 +14,15 @@ const getUsers = function(req, res) {
 
 const createNewUser = (req, res) => {
   let user = new User(req.body);
-  User.findOne({email:user.email}, (err, user) => {
-    if(user){
-      console.log(`${user.firstName} ${user.lastName} already exists`);
+  User.findOne({email:user.email}, (err, foundUser) => {
+    if(foundUser){
+      console.log(`${foundUser.firstName} ${foundUser.lastName} already exists`);
       res.status(409).json(genericResponse());
     } else {
-      User.create(user, function(err){
+      user.save(user, function(err){
         if(err) return console.log(err);
       });
+      console.log(`Saving ${user}`);
       res.json(genericResponse("User successfully created"));
     }
   })

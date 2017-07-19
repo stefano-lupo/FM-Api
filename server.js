@@ -10,7 +10,7 @@ import UserController from './controllers/UserController';
 import CategoryController from './controllers/CategoryController';
 
 // Initialize the DB
-mongoose.connect('mongodb://localhost/nodeServerDB');
+mongoose.connect('mongodb://192.168.1.1/nodeServerDB');
 let db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function() {
