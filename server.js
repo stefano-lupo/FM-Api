@@ -8,9 +8,10 @@ const app = express();
 // Import Controllers
 import UserController from './controllers/UserController';
 import CategoryController from './controllers/CategoryController';
+import ProviderController from './controllers/ProviderController';
 
 // Initialize the DB
-mongoose.connect('mongodb://192.168.1.1/nodeServerDB');
+mongoose.connect('mongodb://localhost/nodeServerDB');
 let db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function() {
@@ -37,3 +38,4 @@ app.get('/', (req, res) => {
 app.post('/user', (req, res) => UserController.createNewUser(req, res));
 app.get('/users', (req, res) => UserController.getUsers(req, res));
 app.get('/categories', (req, res) => CategoryController.getCategories(req, res));
+app.get('/providers/:category', (req, res) => ProviderController.getProvidersByCategory(req, res));
