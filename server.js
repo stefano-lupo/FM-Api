@@ -4,6 +4,8 @@ import mongoose from 'mongoose';
 import bodyParser from 'body-parser';
 const app = express();
 
+// Initialize .env
+require('dotenv').config();
 
 // Import Controllers
 import UserController from './controllers/UserController';
@@ -11,7 +13,7 @@ import CategoryController from './controllers/CategoryController';
 import ProviderController from './controllers/ProviderController';
 
 // Initialize the DB
-mongoose.connect('mongodb://localhost/nodeServerDB');
+mongoose.connect(process.env.DB);
 let db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function() {
