@@ -4,7 +4,7 @@ const getCategories = function(req, res) {
   Category.find(function(err, categories) {
     if(err) {
       console.log(err);
-      return res.status(500).json(genericResponse())
+      return res.status(500).send("ERROR occured with categories");
     }
     console.log("Sending categories");
     res.json(categories);

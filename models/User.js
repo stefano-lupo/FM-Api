@@ -1,19 +1,30 @@
 let mongoose = require('mongoose');
+let bcrypt = require('bcrypt-nodejs');
 
 // Define fields
 let userSchema = mongoose.Schema({
   firstName: String,
   lastName: String,
-  email: String
+  email: String,
+  local: {
+    email: String,
+    password: String,
+  },
+  facebook: {
+    id: String,
+    token: String,
+  },
 });
 
 // Define methods
-userSchema.methods.sayHello = function () {
-  let greeting = this.firstName
-    ? "Meow name is " + this.firstName
-    : "I don't have a name";
-  console.log(greeting);
+userSchema.methods.generateHash = function (password) {
+  console.log("hashing password");
+  return bcrypt.hashSync(password, null);
 };
+
+userSchema.methods.validPassword = function (password) {
+  return bcrypt.compareSync(password, this.local.password)
+}
 
 // Compile schema into model BEFORE compilation
 let User = mongoose.model('User', userSchema);

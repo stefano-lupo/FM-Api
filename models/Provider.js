@@ -6,8 +6,10 @@ let providerSchema = mongoose.Schema({
   lastName: String,
   email: String,
   category: String,
+  description: String,
+  images: Array,
   thumbnail: String,
-  score: Number
+  reviews: Array,
 });
 
 // Compile schema into model BEFORE compilation
