@@ -65,6 +65,8 @@ module.exports = function(passport) {
     clientSecret: process.env.FB_SECRET,
     callbackURL: process.env.FB_CALLBACK_URL
   },
+
+    // Callback function called by FB on login
   function(token, refreshToken, profile, done) {
     process.nextTick(function() {
       User.findOne({'facebook.id': profile.id}, function(err, user) {

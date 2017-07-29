@@ -27,7 +27,8 @@ require('./config/passport')(passport);
 
 
 // Register middleware (Must be done before CRUD handlers)
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.urlencoded({extended: true}));   // Parses application/x-www-form-urlencoded for req.body
+app.use(bodyParser.json());                         // Parses application/json for req.body
 app.use(morgan('dev'));
 app.use(passport.initialize());
 app.use(passport.session());
@@ -47,9 +48,9 @@ app.get('/categories', (req, res) => CategoryController.getCategories(req, res))
 app.get('/providers/:category', (req, res) => ProviderController.getProvidersByCategory(req, res));
 
 // FB routes - scope defines extra stuff we request from FB
-app.get('/auth/facebook', passport.authenticate('facebook', { scope: ['user_friends', 'email']}));
-app.get('/auth/facebook/callback', passport.authenticate('facebook',
-  { successRedirect: './public/happy.html', failureRedirect: './public/sad.html'}));
+app.post('/auth/facebook', (req, res) => UserController.authWithFacebook(req, res));
+// app.get('/auth/facebook', passport.authenticate('facebook', { scope: ['user_friends', 'email']}));
+// app.get('/auth/facebook/callback', passport.authenticate('facebook'));
 
 app.get('/logout', function(req, res) {
   req.logout();
