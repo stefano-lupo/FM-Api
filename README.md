@@ -1,7 +1,8 @@
 # Node-Server
 Testing out making a basic server with Node \
-[Basic Tutorial Here](https://zellwk.com/blog/crud-express-mongodb/) |
-[Authentication Tutorial Here](https://scotch.io/tutorials/easy-node-authentication-setup-and-local)
+[Basic Tutorial Here](https://zellwk.com/blog/crud-express-mongodb/) \
+[Authentication Tutorial Here](https://scotch.io/tutorials/easy-node-authentication-setup-and-local) \
+[JWT Authentication Tutorial Here](https://scotch.io/tutorials/authenticate-a-node-js-api-with-json-web-tokens)
 ## Basic Usage
 * **Dev**: ***npm run start*** - Starts Dev server with nodemon and babel
 * **Build**: ***npm run build*** - Transpiles code for distribution 
