@@ -1,3 +1,5 @@
+import jwt from 'jsonwebtoken';
+
 // Import Models
 let User = require('../models/User').User;
 
@@ -22,21 +24,66 @@ const authWithFacebook = (req, res) => {
     .then((response) => {
     response = response.data;
       if (response.is_valid && response.app_id === process.env.FB_APP_ID) {
-        validToken(res, response.user_id);
+        validToken(res, response.user_id, fbAccessToken);
       } else {
         invalidToken(res);
       }
     })
     .catch((error) => console.log(error));
-}
+};
 
-function validToken(res, fbUserID) {
-  console.log("Valid User Found");
-  res.send({
-    message: "Succesfully Logged in",
-    isLoggedIn: true,
-    authToken: '12345'
+function validToken(res, fbUserID, fbAccessToken) {
+  console.log("Valid Token Found");
+
+  User.findOne({ facebook: {id: fbUserID} }, (err, user) => {
+    if(err) {
+      console.log(err);
+      return;
+    }
+    if(user) {
+      console.log('user found');
+      let authToken = jwt.sign(user, process.env.JWT_SECRET);
+      res.send({
+        message: "Succesfully Logged in",
+        isLoggedIn: true,
+        authToken,
+        user
+      });
+    } else {
+      fetch(`https://graph.facebook.com/v2.10/me?fields=first_name%2Clast_name%2Cemail&access_token=${fbAccessToken}`)
+      .then(response => {
+        return response.json()
+      })
+      .then(response => {
+        const firstName = response.first_name;
+        const lastName = response.last_name;
+        const email = response.email;
+        console.log("Creating user");
+        User.create({
+          firstName,
+          lastName,
+          email,
+          facebook: {
+            id: fbUserID
+          }
+        }, (err, user) => {
+          if(err) {
+            console.log(err);
+          } else {
+            console.log("Sending created user");
+            let authToken = jwt.sign(user, process.env.JWT_SECRET);
+            res.send({
+              message: "Succesfully Logged in",
+              isLoggedIn: true,
+              authToken,
+              user
+            });
+          }
+        });
+      })
+    }
   });
+
 }
 
 function invalidToken(res) {
@@ -63,6 +110,23 @@ const getUsers = function(req, res) {
 };
 
 /**
+ * Get User
+ * /users/me
+ */
+const getUser = function(req, res) {
+  console.log(req.decoded);
+  User.find(function(err, user) {
+    if(err) {
+      console.log(err);
+      return res.status(500).json(genericResponse())
+    }
+    console.log("Sending users");
+    res.json(user);
+  })
+};
+
+
+/**
  * POST /user
  * Create a new user if user doesn't already exist
  */
@@ -85,6 +149,7 @@ const createNewUser = (req, res) => {
 module.exports = {
   authWithFacebook,
   getUsers,
+  getUser,
   createNewUser
 };
 

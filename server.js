@@ -3,7 +3,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import bodyParser from 'body-parser';
 import morgan from 'morgan';
-import passport from 'passport';
+import jwt from 'jsonwebtoken';
 const app = express();
 
 // Initialize .env
@@ -22,7 +22,15 @@ db.once('open', function() {
   console.log("Connected to Database");
 });
 
+
+/* Passport stuff
+import passport from 'passport';
 require('./config/passport')(passport);
+app.use(passport.initialize());
+app.use(passport.session());
+app.post('/user', passport.authenticate('local-signup'));
+app.get('/auth/facebook', passport.authenticate('facebook', { scope: ['user_friends', 'email']}));
+app.get('/auth/facebook/callback', passport.authenticate('facebook'));*/
 
 
 
@@ -30,34 +38,48 @@ require('./config/passport')(passport);
 app.use(bodyParser.urlencoded({extended: true}));   // Parses application/x-www-form-urlencoded for req.body
 app.use(bodyParser.json());                         // Parses application/json for req.body
 app.use(morgan('dev'));
-app.use(passport.initialize());
-app.use(passport.session());
+
+// expose environment variables to app
+app.set('jwtSecret', process.env.JWT_SECRET);
 
 
 
 
-// Define Routes
-app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/public/');
+// Unauthenticated endpoints
+app.post('/auth/facebook', (req, res) => UserController.authWithFacebook(req, res));
+
+
+// Authorization Middleware
+app.use(function(req, res, next) {
+  let token = req.body.token || req.query.token || req.headers['x-access-token'];
+  if(token) {
+    jwt.verify(token, app.get('jwtSecret'), (err, decoded) => {
+      if(err) {
+        return res.json({authenticated: false, message: 'Failed to authenticate token'})
+      } else {
+        req.decoded = decoded;
+        next();
+      }
+    })
+  } else {
+    return res.status(403).send({
+      authenticated: false,
+      message: 'No token provided'
+    });
+  }
 });
 
-// Local routes
-app.post('/user', passport.authenticate('local-signup'));
+// Authenticated endpoints
 app.get('/users', (req, res) => UserController.getUsers(req, res));
+app.get('/users/me', (req, res) => UserController.getUser(req, res));
 app.get('/categories', (req, res) => CategoryController.getCategories(req, res));
 app.get('/providers/:category', (req, res) => ProviderController.getProvidersByCategory(req, res));
 
-// FB routes - scope defines extra stuff we request from FB
-app.post('/auth/facebook', (req, res) => UserController.authWithFacebook(req, res));
-// app.get('/auth/facebook', passport.authenticate('facebook', { scope: ['user_friends', 'email']}));
-// app.get('/auth/facebook/callback', passport.authenticate('facebook'));
 
 app.get('/logout', function(req, res) {
   req.logout();
   res.redirect('/');
-})
-
-
+});
 
 
 
@@ -65,11 +87,3 @@ app.get('/logout', function(req, res) {
 app.listen(3000, function() {
   console.log('Listening on port 3000');
 });
-
-
-function isLoggedIn(req, res, next) {
-  if(req.isAuthenticated()) {
-    return next();
-  }
-  res.status(403).send('You are unauthorized to view this');
-}
