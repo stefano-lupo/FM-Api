@@ -1,12 +1,11 @@
 import jwt from 'jsonwebtoken';
 
 // Import Models
-let Account = require('../models/Account').Account;
+const Account = require('../models/Account').Account;
+const User = require('../models/User').User;
 
 // Initialize .env
 require('dotenv').config();
-
-let fetch = require("node-fetch")
 
 /**
  * POST /auth/register
@@ -24,26 +23,39 @@ const register = (req, res) => {
       let newAccount = new Account({firstName, lastName, email});
       newAccount.password = newAccount.generateHash(password);
 
-      console.log(newAccount);
-      newAccount.save((err) => {
+      const user = new User({firstName, lastName, rating: 50});
+      user.save((err) => {
         if(err) {
-          console.log(err);
-          res.send({message: "An error has occured"});
-        } else {
-          login({email, password}, res);
+          return res.status(500).json({message: `Error creating account : ${email}`});
         }
+
+        newAccount.user = user._id;
+        console.log(newAccount);
+        newAccount.save((err) => {
+          if(err) {
+            console.log(err);
+            res.send({message: "An error has occured"});
+          } else {
+            login({email, password}, res);
+          }
+        });
       });
     }
   })
 };
 
-function login(req, res) {
-  console.log("about to login");
-  const { email, password } = req;
+
+/**
+ * POST /auth/login
+ * attempts to login a user with the given email and password
+ */
+const login = (req, res) => {
+  const { email, password } = req.body || req;  // hack here so that this can be called from above
+  console.log(`about to login with ${email}`);
 
   Account.findOne({ email }, (err, account) => {
-    if(err) {
-      console.log(err);
+    if(err || !account) {
+      console.log(`error: ${err}`);
       return res.status(403).json({message: `Unrecognised Email`});
     }
 
@@ -52,17 +64,157 @@ function login(req, res) {
       return res.status(403).json({message: `Incorrect Password`});
     }
 
-    let accountAuthToken = jwt.sign(account, process.env.JWT_SECRET);
-    res.send({
-      success: true,
-      message: "Succesfully Logged in",
-      account,
-      accountAuthToken,
+    // Valid account, generate token
+    const accountAuthToken = jwt.sign(account, process.env.JWT_SECRET);
+
+    User.findOne({_id: account.user}, (err, user) => {
+      if(err) {
+        console.log(err);
+        return res.status(500).send("Error no user to match accounts userId");
+      }
+      const userAuthToken = jwt.sign(account.user, process.env.JWT_SECRET);
+      return res.send({
+        success: true,
+        message: "Succesfully Logged in",
+        account: {
+          accountAuthToken,
+          providers: account.providers,
+          email: account.email,
+        },
+        user: {
+          ...user.toObject(),   // to not include mongoose models inner data
+          userAuthToken,
+        },
+      });
     });
+  });
+};
+
+
+
+let fetch = require("node-fetch");
+
+/**
+ * POST /auth/facebook
+ * Validate user with their facebook token
+ */
+const authWithFacebook = (req, res) => {
+  const { fbAccessToken } = req.body;
+  const url = `https://graph.facebook.com/v2.10/debug_token?input_token=${fbAccessToken}&access_token=${process.env.FB_APP_ID}|${process.env.FB_SECRET}`;
+  fetch(url)
+    .then((response) => {
+      return response.json();
+    })
+    .then((response) => {
+      response = response.data;
+      if (response.is_valid && response.app_id === process.env.FB_APP_ID) {
+        validToken(res, response.user_id, fbAccessToken);
+      } else {
+        invalidToken(res);
+      }
+    })
+    .catch((error) => console.log(error));
+};
+
+function validToken(res, fbUserID, fbAccessToken) {
+  console.log("Valid Token Found");
+
+  Account.findOne({facebook: {id: fbUserID}}, (err, account) => {
+    if (err) {
+      console.log(`err ${err}`);
+      return err;
+    }
+
+    if (!account) {
+      // Create said account
+      fetch(`https://graph.facebook.com/v2.10/me?fields=first_name%2Clast_name%2Cemail&access_token=${fbAccessToken}`)
+        .then(response => {
+          return response.json()
+        })
+        .then(response => {
+          const firstName = response.first_name;
+          const lastName = response.last_name;
+          const email = response.email;
+
+          // Create the new user associated with the account
+          const user = new User({firstName, lastName, rating: 50});
+          user.save(err => {
+            if (err) {
+              return console.log(err);
+            }
+
+            console.log("No account, Saved user");
+            account = new Account({
+              firstName,
+              lastName,
+              email,
+              user: user._id,
+              facebook: {
+                id: fbUserID
+              }
+            });
+
+            account.save((err) => {
+              if(err) console.log(err);
+              const accountAuthToken = jwt.sign(account, process.env.JWT_SECRET);
+              const userAuthToken = jwt.sign(user, process.env.JWT_SECRET);
+              console.log("Sending new acc/user");
+              console.log(account);
+              return res.send({
+                success: true,
+                message: "Succesfully Logged in",
+                account: {
+                  accountAuthToken,
+                  providers: account.providers,
+                  email: account.email,
+                },
+                user: {
+                  ...user.toObject(),   // to not include mongoose models inner data
+                  userAuthToken,
+                },
+              });
+            });
+          });
+        });
+    } else {
+      User.findOne({_id: account.user}, (err, user) => {
+        if (err) {
+          console.log(err);
+          return res.status(500).send("Error no user to match accounts userId");
+        }
+        const accountAuthToken = jwt.sign(account, process.env.JWT_SECRET);
+        const userAuthToken = jwt.sign(account.user, process.env.JWT_SECRET);
+        return res.send({
+          success: true,
+          message: "Succesfully Logged in",
+          account: {
+            accountAuthToken,
+            providers: account.providers,
+            email: account.email,
+          },
+          user: {
+            ...user.toObject(),   // to not include mongoose models inner data
+            userAuthToken,
+          },
+        });
+      });
+    }
   });
 }
 
 
+function invalidToken(res) {
+  console.log("Invalid user");
+  res.send({
+    message: "Failed To Log In",
+    isLoggedIn: false,
+  });
+}
+
+
+
 module.exports = {
   register,
+  login,
+  authWithFacebook
 };

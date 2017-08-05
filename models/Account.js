@@ -3,15 +3,14 @@ let bcrypt = require('bcrypt-nodejs');
 
 // Define fields
 let accountSchema = mongoose.Schema({
-  firstName: String,
-  lastName: String,
+  firstName: String,      // Probably delete as contained in USer
+  lastName: String,       // same
   email: String,
   password: String,
   createdOn: Date,
   lastLogIn: Date,
   facebook: {
     id: String,
-    token: String,
   },
   providers: Array,
   user: mongoose.Schema.ObjectId

@@ -47,8 +47,9 @@ app.set('jwtSecret', process.env.JWT_SECRET);
 
 
 // Unauthenticated endpoints
-app.post('/auth/facebook', (req, res) => UserController.authWithFacebook(req, res));
+app.post('/auth/facebook', (req, res) => AccountController.authWithFacebook(req, res));
 app.post('/auth/register', (req, res) => AccountController.register(req, res));
+app.post('/auth/login', (req, res) => AccountController.login(req, res));
 
 
 // Authorization Middleware
