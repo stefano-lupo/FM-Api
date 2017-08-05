@@ -7,7 +7,8 @@ let userSchema = mongoose.Schema({
   lastName: String,
   jobs: {
     active: Array,
-    completed: Array
+    completed: Array,
+    requested: Array,
   },
   reviews: Array,
   rating: Number,
