@@ -7,6 +7,8 @@ Testing out making a basic server with Node \
 * **Dev**: ***npm run start*** - Starts Dev server with nodemon and babel
 * **Build**: ***npm run build*** - Transpiles code for distribution 
 
+## Notes for Stupid
+Model.find() returns an ***array***, use Model.findOne(err, myModel) to get an instance.
 
 ## Packages Used
 * Express 

@@ -13,6 +13,7 @@ require('dotenv').config();
 import UserController from './controllers/UserController';
 import CategoryController from './controllers/CategoryController';
 import ProviderController from './controllers/ProviderController';
+import AccountController from './controllers/AccountController';
 
 // Initialize the DB
 mongoose.connect(process.env.DB);
@@ -47,6 +48,7 @@ app.set('jwtSecret', process.env.JWT_SECRET);
 
 // Unauthenticated endpoints
 app.post('/auth/facebook', (req, res) => UserController.authWithFacebook(req, res));
+app.post('/auth/register', (req, res) => AccountController.register(req, res));
 
 
 // Authorization Middleware
