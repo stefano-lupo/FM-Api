@@ -14,6 +14,7 @@ import UserController from './controllers/UserController';
 import CategoryController from './controllers/CategoryController';
 import ProviderController from './controllers/ProviderController';
 import AccountController from './controllers/AccountController';
+import JobController from './controllers/JobController';
 
 // Initialize the DB
 mongoose.connect(process.env.DB);
@@ -58,6 +59,7 @@ app.use(function(req, res, next) {
   if(token) {
     jwt.verify(token, app.get('jwtSecret'), (err, decoded) => {
       if(err) {
+        console.log("Invalid token supplied");
         return res.json({authenticated: false, message: 'Failed to authenticate token'})
       } else {
         req.decoded = decoded;
@@ -77,7 +79,7 @@ app.get('/users', (req, res) => UserController.getUsers(req, res));
 app.get('/users/me', (req, res) => UserController.getUser(req, res));
 app.get('/categories', (req, res) => CategoryController.getCategories(req, res));
 app.get('/providers/:category', (req, res) => ProviderController.getProvidersByCategory(req, res));
-
+app.post('/jobs', (req, res) => JobController.requestJob(req, res));
 
 app.get('/logout', function(req, res) {
   req.logout();

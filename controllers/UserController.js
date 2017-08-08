@@ -20,7 +20,7 @@ const getUsers = function(req, res) {
  * /users/me
  */
 const getUser = function(req, res) {
-  console.log(req.decoded);
+  console.log(req.user);
   User.find(function(err, user) {
     if(err) {
       console.log(err);

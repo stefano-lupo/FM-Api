@@ -4,15 +4,16 @@ let mongoose = require('mongoose');
 let jobSchema = mongoose.Schema({
   title: String,
   description: String,
-  user: Schema.Types.ObjectId,
-  provider: Schema.Types.ObjectId,
-  requestData: Date,
+  userID: mongoose.Schema.ObjectId,
+  providerID: mongoose.Schema.ObjectId,
+  requestDate: Date,
   startDate: Date,
   completionDate: Date,
   status: String,
   category: String,
-  review: Array,
+  review: Object,
 });
+
 
 // Compile schema into model BEFORE exporting
 let Job = mongoose.model('Job', jobSchema);

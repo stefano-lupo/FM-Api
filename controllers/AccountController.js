@@ -65,14 +65,14 @@ const login = (req, res) => {
     }
 
     // Valid account, generate token
-    const accountAuthToken = jwt.sign(account, process.env.JWT_SECRET);
+    const accountAuthToken = jwt.sign(account.toObject(), process.env.JWT_SECRET);
 
     User.findOne({_id: account.user}, (err, user) => {
       if(err) {
         console.log(err);
         return res.status(500).send("Error no user to match accounts userId");
       }
-      const userAuthToken = jwt.sign(account.user, process.env.JWT_SECRET);
+      const userAuthToken = jwt.sign(user.toObject(), process.env.JWT_SECRET);
       return res.send({
         success: true,
         message: "Succesfully Logged in",
@@ -156,8 +156,8 @@ function validToken(res, fbUserID, fbAccessToken) {
 
             account.save((err) => {
               if(err) console.log(err);
-              const accountAuthToken = jwt.sign(account, process.env.JWT_SECRET);
-              const userAuthToken = jwt.sign(user, process.env.JWT_SECRET);
+              const accountAuthToken = jwt.sign(account.toObject(), process.env.JWT_SECRET);
+              const userAuthToken = jwt.sign(user.toObject(), process.env.JWT_SECRET);
               console.log("Sending new acc/user");
               console.log(account);
               return res.send({
@@ -182,8 +182,8 @@ function validToken(res, fbUserID, fbAccessToken) {
           console.log(err);
           return res.status(500).send("Error no user to match accounts userId");
         }
-        const accountAuthToken = jwt.sign(account, process.env.JWT_SECRET);
-        const userAuthToken = jwt.sign(account.user, process.env.JWT_SECRET);
+        const accountAuthToken = jwt.sign(account.toObject(), process.env.JWT_SECRET);
+        const userAuthToken = jwt.sign(user.toObject(), process.env.JWT_SECRET);
         return res.send({
           success: true,
           message: "Succesfully Logged in",
