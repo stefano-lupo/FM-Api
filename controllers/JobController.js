@@ -30,8 +30,16 @@ const requestJob = (req, res) => {
       return res.send("Error occured saving job");
     }
     console.log(job);
-    return res.send(job);
 
+    const jobID = job._id;
+    User.update({_id: userID}, { $push: { 'jobs.requested': jobID } }, (err, user) => {
+      if(err) {
+        console.log("error occured saving requested job to user");
+        return res.send("Error occured saving requested job to user");
+      }
+
+      return res.send(job);
+    });
   });
 };
 

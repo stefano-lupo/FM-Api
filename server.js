@@ -67,6 +67,7 @@ app.use(function(req, res, next) {
       }
     })
   } else {
+    console.log("No token provided");
     return res.status(403).send({
       authenticated: false,
       message: 'No token provided'
@@ -77,6 +78,7 @@ app.use(function(req, res, next) {
 // Authenticated endpoints
 app.get('/users', (req, res) => UserController.getUsers(req, res));
 app.get('/users/me', (req, res) => UserController.getUser(req, res));
+app.get('/users/me/jobs', (req, res) => UserController.getUsersJobs(req, res));
 app.get('/categories', (req, res) => CategoryController.getCategories(req, res));
 app.get('/providers/:category', (req, res) => ProviderController.getProvidersByCategory(req, res));
 app.post('/jobs', (req, res) => JobController.requestJob(req, res));

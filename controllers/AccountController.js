@@ -84,6 +84,7 @@ const login = (req, res) => {
         user: {
           ...user.toObject(),   // to not include mongoose models inner data
           userAuthToken,
+          jobs: user.getJobs()
         },
       });
     });
@@ -119,7 +120,7 @@ const authWithFacebook = (req, res) => {
 function validToken(res, fbUserID, fbAccessToken) {
   console.log("Valid Token Found");
 
-  Account.findOne({facebook: {id: fbUserID}}, (err, account) => {
+  Account.findOne({facebook: {id: fbUserID}}, async (err, account) => {
     if (err) {
       console.log(`err ${err}`);
       return err;
@@ -177,13 +178,16 @@ function validToken(res, fbUserID, fbAccessToken) {
           });
         });
     } else {
-      User.findOne({_id: account.user}, (err, user) => {
+      User.findOne({_id: account.user}, async (err, user) => {
         if (err) {
           console.log(err);
           return res.status(500).send("Error no user to match accounts userId");
         }
         const accountAuthToken = jwt.sign(account.toObject(), process.env.JWT_SECRET);
         const userAuthToken = jwt.sign(user.toObject(), process.env.JWT_SECRET);
+        const jobs = await user.getJobs();
+        console.log("jobs are");
+        console.log(jobs);
         return res.send({
           success: true,
           message: "Succesfully Logged in",
@@ -195,6 +199,7 @@ function validToken(res, fbUserID, fbAccessToken) {
           user: {
             ...user.toObject(),   // to not include mongoose models inner data
             userAuthToken,
+            jobs
           },
         });
       });
