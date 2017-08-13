@@ -12,6 +12,7 @@ let jobSchema = mongoose.Schema({
   status: String,
   category: String,
   review: Object,
+  messages: Array,
 });
 
 

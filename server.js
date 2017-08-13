@@ -15,6 +15,7 @@ import CategoryController from './controllers/CategoryController';
 import ProviderController from './controllers/ProviderController';
 import AccountController from './controllers/AccountController';
 import JobController from './controllers/JobController';
+import MessageController from './controllers/MessageController';
 
 // Initialize the DB
 mongoose.connect(process.env.DB);
@@ -86,6 +87,8 @@ app.get('/providers/:category', (req, res) => ProviderController.getProvidersByC
 
 app.post('/jobs', (req, res) => JobController.requestJob(req, res));
 app.post('/jobs/:id/activate', (req, res) => JobController.activateJob(req, res));
+app.post('/jobs/:id/messages', (req, res) => MessageController.sendMessage(req, res));
+app.get('/jobs/:id/messages', (req, res) => MessageController.getMessages(req, res));
 
 app.get('/logout', function(req, res) {
   req.logout();

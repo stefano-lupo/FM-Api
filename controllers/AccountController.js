@@ -117,7 +117,7 @@ const authWithFacebook = (req, res) => {
     .catch((error) => console.log(error));
 };
 
-function validxToken(res, fbUserID, fbAccessToken) {
+function validToken(res, fbUserID, fbAccessToken) {
   console.log("Valid Token Found");
 
   Account.findOne({facebook: {id: fbUserID}}, async (err, account) => {
@@ -185,7 +185,7 @@ function validxToken(res, fbUserID, fbAccessToken) {
         }
         const accountAuthToken = jwt.sign(account.toObject(), process.env.JWT_SECRET);
         const userAuthToken = jwt.sign(user.toObject(), process.env.JWT_SECRET);
-        const jobs = await user.getJobs();
+        const jobs = await user.getJobs()
         console.log("jobs are");
         console.log(jobs);
         return res.send({

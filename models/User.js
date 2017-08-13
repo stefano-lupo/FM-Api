@@ -16,7 +16,7 @@ let userSchema = mongoose.Schema({
 
 userSchema.methods.getJobs = async function() {
   console.log(`Getting Jobs for ${this._id}`);
-  const allJobs = await Job.find({userID : this._id});
+  const allJobs = await Job.find({userID : this._id}).select('-messages');
 
   let requested = [], active = [], completed = [];
 
