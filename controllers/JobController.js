@@ -1,3 +1,5 @@
+import moment from 'moment';
+
 // Import Models
 let User = require('../models/User').User;
 let Provider = require('../models/Provider').Provider;
@@ -20,7 +22,7 @@ const requestJob = (req, res) => {
   const job = new Job({
     ...jobRequest,
     userID,
-    requestDate: new Date(),
+    requestDate: moment(),
     status: 'requested',
   });
 
@@ -44,6 +46,23 @@ const requestJob = (req, res) => {
 };
 
 
+/**
+ * POST /jobs/:id/activate
+ * Makes job active (accepts job request - done by provider)
+ */
+
+const activateJob = async (req, res) => {
+  // const userID = req.decoded._id;
+  const jobID = req.params.id;
+  console.log(jobID);
+
+  const job = await Job.findOneAndUpdate({_id: jobID}, {$set: {status: 'active', startDate: moment()} });
+
+  res.send(job);
+};
+
+
 module.exports = {
-  requestJob
+  requestJob,
+  activateJob
 };

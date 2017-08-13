@@ -79,9 +79,13 @@ app.use(function(req, res, next) {
 app.get('/users', (req, res) => UserController.getUsers(req, res));
 app.get('/users/me', (req, res) => UserController.getUser(req, res));
 app.get('/users/me/jobs', (req, res) => UserController.getUsersJobs(req, res));
+
 app.get('/categories', (req, res) => CategoryController.getCategories(req, res));
+
 app.get('/providers/:category', (req, res) => ProviderController.getProvidersByCategory(req, res));
+
 app.post('/jobs', (req, res) => JobController.requestJob(req, res));
+app.post('/jobs/:id/activate', (req, res) => JobController.activateJob(req, res));
 
 app.get('/logout', function(req, res) {
   req.logout();

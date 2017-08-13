@@ -117,7 +117,7 @@ const authWithFacebook = (req, res) => {
     .catch((error) => console.log(error));
 };
 
-function validToken(res, fbUserID, fbAccessToken) {
+function validxToken(res, fbUserID, fbAccessToken) {
   console.log("Valid Token Found");
 
   Account.findOne({facebook: {id: fbUserID}}, async (err, account) => {
