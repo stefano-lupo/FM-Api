@@ -1,5 +1,5 @@
 let mongoose = require('mongoose');
-let Job = require('../models/Job').Job;
+let Job = require('.//Job').Job;
 
 // Define fields
 let userSchema = mongoose.Schema({

@@ -1,225 +1,77 @@
 import jwt from 'jsonwebtoken';
+import moment from 'moment';
 
-// Import Models
-const Account = require('../models/Account').Account;
-const User = require('../models/User').User;
+import { get } from '../util/fetch';
+import { TOKEN_EXPIRE_MINUTES } from '../constants/app';
 
-// Initialize .env
-require('dotenv').config();
+import models from '../models/';
+const Account = models.account;
 
 /**
  * POST /auth/register
  * Register a new user if one doesn't already exist
  */
-const register = (req, res) => {
-  const { email } = req.body.registerForm;
-  Account.findOne({email: email}, (err, account) => {
+const register = async (req, res) => {
+  const {email, firstName, lastName, password} = req.body;
+  console.log(email);
+  try {
+    let account = await Account.find({where: {email: email}});
     if(account) {
-      console.log(`${account.email}:  account already exists`);
-      res.status(409).json({message: `${account.email}:  account already exists`});
+      res.json(account);
     } else {
-      const {firstName, lastName, password} = req.body.registerForm;
-
-      let newAccount = new Account({firstName, lastName, email});
-      newAccount.password = newAccount.generateHash(password);
-
-      const user = new User({firstName, lastName, rating: 50});
-      user.save((err) => {
-        if(err) {
-          return res.status(500).json({message: `Error creating account : ${email}`});
-        }
-
-        newAccount.user = user._id;
-        console.log(newAccount);
-        newAccount.save((err) => {
-          if(err) {
-            console.log(err);
-            res.send({message: "An error has occured"});
-          } else {
-            login({email, password}, res);
-          }
-        });
-      });
+      console.log("Creating account");
+      account = await Account.create({email, firstName, lastName, password});
+      res.json(account);
     }
-  })
+  } catch (e) {
+    console.log(e);
+  }
 };
-
-
-/**
- * POST /auth/login
- * attempts to login a user with the given email and password
- */
-const login = (req, res) => {
-  const { email, password } = req.body || req;  // hack here so that this can be called from above
-  console.log(`about to login with ${email}`);
-
-  Account.findOne({ email }, (err, account) => {
-    if(err || !account) {
-      console.log(`error: ${err}`);
-      return res.status(403).json({message: `Unrecognised Email`});
-    }
-
-    if(!account.isValidPassword(password)) {
-      console.log("incorrect password");
-      return res.status(403).json({message: `Incorrect Password`});
-    }
-
-    // Valid account, generate token
-    const accountAuthToken = jwt.sign(account.toObject(), process.env.JWT_SECRET);
-
-    User.findOne({_id: account.user}, (err, user) => {
-      if(err) {
-        console.log(err);
-        return res.status(500).send("Error no user to match accounts userId");
-      }
-      const userAuthToken = jwt.sign(user.toObject(), process.env.JWT_SECRET);
-      return res.send({
-        success: true,
-        message: "Succesfully Logged in",
-        account: {
-          accountAuthToken,
-          providers: account.providers,
-          email: account.email,
-        },
-        user: {
-          ...user.toObject(),   // to not include mongoose models inner data
-          userAuthToken,
-          jobs: user.getJobs()
-        },
-      });
-    });
-  });
-};
-
-
-
-let fetch = require("node-fetch");
 
 /**
  * POST /auth/facebook
  * Validate user with their facebook token
  */
-const authWithFacebook = (req, res) => {
+const authWithFacebook = async (req, res, next) => {
   const { fbAccessToken } = req.body;
-  const url = `https://graph.facebook.com/v2.10/debug_token?input_token=${fbAccessToken}&access_token=${process.env.FB_APP_ID}|${process.env.FB_SECRET}`;
-  fetch(url)
-    .then((response) => {
-      return response.json();
-    })
-    .then((response) => {
-      response = response.data;
-      if (response.is_valid && response.app_id === process.env.FB_APP_ID) {
-        validToken(res, response.user_id, fbAccessToken);
-      } else {
-        invalidToken(res);
-      }
-    })
-    .catch((error) => console.log(error));
+  const fbAppId = req.app.get('fbAppId');
+  const fbSecret = req.app.get('fbSecret');
+  const jwtSecret = req.app.get('jwtSecret');
+  const url = `https://graph.facebook.com/v2.10/debug_token?input_token=${fbAccessToken}&access_token=${fbAppId}|${fbSecret}`;
+
+  let response = {};
+  try {
+    response = await get(url);
+    response = response.data;
+  } catch (err) {
+    console.log(err.status);
+    next(err);
+  }
+
+  if (!response.is_valid || response.app_id !== fbAppId) {
+    return next({status: 401, message: "Invalid Facebook Token Supplied"});
+  }
+
+  const facebookId = response.user_id;
+  let account = await Account.find({where: {facebookId}, attributes: ['id', 'firstName', 'lastName', 'email', 'facebookId']});
+  if(!account) {
+    let response = await fetch(`https://graph.facebook.com/v2.10/me?fields=first_name%2Clast_name%2Cemail&access_token=${fbAccessToken}`);
+    response = await response.json();
+    const firstName = response.first_name;
+    const lastName = response.last_name;
+    const { email } = response;
+    account = await Account.create({firstName, lastName, email, facebookId});
+  }
+
+  const auth = {
+    token: jwt.sign({data: account.id}, jwtSecret, {expiresIn: TOKEN_EXPIRE_MINUTES * 60}),
+    expiresAt: moment().add(TOKEN_EXPIRE_MINUTES, 'm')
+  };
+  account = account.get({plain: true});     // get standard JSON of rows
+  res.json({...account, auth});
 };
 
-function validToken(res, fbUserID, fbAccessToken) {
-  console.log("Valid Token Found");
-
-  Account.findOne({facebook: {id: fbUserID}}, async (err, account) => {
-    if (err) {
-      console.log(`err ${err}`);
-      return err;
-    }
-
-    if (!account) {
-      // Create said account
-      fetch(`https://graph.facebook.com/v2.10/me?fields=first_name%2Clast_name%2Cemail&access_token=${fbAccessToken}`)
-        .then(response => {
-          return response.json()
-        })
-        .then(response => {
-          const firstName = response.first_name;
-          const lastName = response.last_name;
-          const email = response.email;
-
-          // Create the new user associated with the account
-          const user = new User({firstName, lastName, rating: 50});
-          user.save(err => {
-            if (err) {
-              return console.log(err);
-            }
-
-            console.log("No account, Saved user");
-            account = new Account({
-              firstName,
-              lastName,
-              email,
-              user: user._id,
-              facebook: {
-                id: fbUserID
-              }
-            });
-
-            account.save((err) => {
-              if(err) console.log(err);
-              const accountAuthToken = jwt.sign(account.toObject(), process.env.JWT_SECRET);
-              const userAuthToken = jwt.sign(user.toObject(), process.env.JWT_SECRET);
-              console.log("Sending new acc/user");
-              console.log(account);
-              return res.send({
-                success: true,
-                message: "Succesfully Logged in",
-                account: {
-                  accountAuthToken,
-                  providers: account.providers,
-                  email: account.email,
-                },
-                user: {
-                  ...user.toObject(),   // to not include mongoose models inner data
-                  userAuthToken,
-                },
-              });
-            });
-          });
-        });
-    } else {
-      User.findOne({_id: account.user}, async (err, user) => {
-        if (err) {
-          console.log(err);
-          return res.status(500).send("Error no user to match accounts userId");
-        }
-        const accountAuthToken = jwt.sign(account.toObject(), process.env.JWT_SECRET);
-        const userAuthToken = jwt.sign(user.toObject(), process.env.JWT_SECRET);
-        const jobs = await user.getJobs()
-        console.log("jobs are");
-        console.log(jobs);
-        return res.send({
-          success: true,
-          message: "Succesfully Logged in",
-          account: {
-            accountAuthToken,
-            providers: account.providers,
-            email: account.email,
-          },
-          user: {
-            ...user.toObject(),   // to not include mongoose models inner data
-            userAuthToken,
-            jobs
-          },
-        });
-      });
-    }
-  });
-}
-
-
-function invalidToken(res) {
-  console.log("Invalid user");
-  res.send({
-    message: "Failed To Log In",
-    isLoggedIn: false,
-  });
-}
-
-
-
 module.exports = {
-  register,
-  login,
-  authWithFacebook
+  authWithFacebook,
+  register
 };
