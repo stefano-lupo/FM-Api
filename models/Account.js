@@ -1,7 +1,7 @@
-let bcrypt = require('bcrypt-nodejs');
+import bcrypt from 'bcrypt-nodejs';
 
 export default function(sequelize, Sequelize) {
-  return sequelize.define('account', {
+  const Account = sequelize.define('account', {
     id: {
       type: Sequelize.UUID,
       defaultValue: Sequelize.UUIDV1,
@@ -34,22 +34,8 @@ export default function(sequelize, Sequelize) {
       }
     }
   });
+  Account.associate = (models) => {
+    Account.hasMany(models.provider);
+  };
+  return Account;
 };
-
-// // Define methods
-// accountSchema.methods.generateHash = function (password) {
-//   console.log("hashing password");
-//   return bcrypt.hashSync(password, null);
-// };
-//
-// accountSchema.methods.isValidPassword = function (password) {
-//   console.log("checking password");
-//   return bcrypt.compareSync(password, this.password)
-// };
-//
-// // Compile schema into model BEFORE compilation
-// let Account = mongoose.model('Account', accountSchema);
-//
-// module.exports = {
-//   Account
-// };
