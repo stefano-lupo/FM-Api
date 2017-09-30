@@ -18,16 +18,16 @@ const db  = {};
 fs
   .readdirSync(__dirname)
   .filter((file) => {
-    return (file.indexOf(".") !== 0) && (file === "Account.js");
+    return (file.indexOf(".") !== 0) && (( file === "Provider.js") || (file === "Account.js"));
   })
   .forEach((file) => {
+  console.log("Parsing " + file);
     const model = sequelize.import(path.join(__dirname, file));
     db[model.name] = model;
   });
 
 Object.keys(db).forEach(function(modelName) {
   if ("associate" in db[modelName]) {
-    console.log("hit");
     db[modelName].associate(db);
   }
 });

@@ -5,6 +5,44 @@ export default function(sequelize, Sequelize) {
       defaultValue: Sequelize.UUIDV1,
       primaryKey: true
     },
+    category: {
+      type: Sequelize.STRING,
+    },
+    description: {
+      type: Sequelize.STRING,
+    },
+    images: Sequelize.JSON,
+    name: {
+      type: Sequelize.STRING
+    },
+    score:{
+      type: Sequelize.INTEGER,
+      defaultValue: 50,
+    },
+    thumbnail: Sequelize.STRING
+  });
+
+  Provider.associate = (models) => {
+    Provider.belongsTo(models.account);
+  };
+  return Provider;
+};
+
+
+
+
+
+
+
+
+/*
+export default function(sequelize, Sequelize) {
+  const Provider = sequelize.define('provider', {
+    id: {
+      type: Sequelize.UUID,
+      defaultValue: Sequelize.UUIDV1,
+      primaryKey: true
+    },
     name: {
       type: Sequelize.STRING
     },
@@ -17,9 +55,9 @@ export default function(sequelize, Sequelize) {
     images: Sequelize.JSON,
   });
 
-  Provider.associate = (models) => {
-    Provider.belongsTo(models.account);
-  };
+  // Provider.associate = (models) => {
+  //   Provider.belongsTo(models.account);
+  // };
 
   return Provider;
 };
@@ -60,4 +98,4 @@ let Provider = mongoose.model('Provider', providerSchema);
 
 module.exports = {
   Provider
-};
+};*/

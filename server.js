@@ -27,6 +27,10 @@ app.post('/auth/facebook', AccountController.authWithFacebook);
 app.post('/auth/register', (req, res) => AccountController.register(req, res));
 app.post('/auth/login', (req, res) => AccountController.login(req, res));
 
+// Testing
+app.post('/providers/test', ProviderController.createTestProvider);
+app.get('/providers/test', ProviderController.getTestProvider);
+
 
 // Authorization Middleware
 app.use((req, res, next) => {
@@ -56,8 +60,6 @@ app.get('/users/me', (req, res) => UserController.getUser(req, res));
 app.get('/users/me/jobs', (req, res) => UserController.getUsersJobs(req, res));
 
 app.get('/categories', (req, res) => CategoryController.getCategories(req, res));
-
-app.get('/providers/:category', (req, res) => ProviderController.getProvidersByCategory(req, res));
 
 app.post('/jobs', (req, res) => JobController.requestJob(req, res));
 app.post('/jobs/:id/activate', (req, res) => JobController.activateJob(req, res));

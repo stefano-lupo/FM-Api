@@ -1,17 +1,31 @@
-let Provider = require('../models/Provider').Provider;
+import models from '../models/';
 
-const getProvidersByCategory = function(req, res) {
-  const category = req.query.category;
-  Provider.find({ category }, null, {sort: {score: -1}}, (err, providers) => {
-    if(err) {
-      console.log(err);
-      return res.status(500).json(genericResponse());
-    }
-    console.log(`Sending providers by ${category}, found ${providers.length}`);
-    res.json(providers);
-  })
+const Provider = models.provider;
+const Account = models.account;
+
+const createTestProvider = async (req, res) => {
+  const account = await Account.find({facebookId: '10212210797601804'});
+  const id = account.dataValues.id;
+  console.log(account);
+  const provider = await Provider.create({
+    name: "Lupo Web Design",
+    category: "Who knows",
+    description: "Great Websites",
+    images: ['https://openclipart.org/download/17810/lemmling-Cartoon-elephant.svg'],
+    accountId: id
+  });
+  res.send(`${provider.name} created`);
 };
 
-module.exports = {
-  getProvidersByCategory
+const getTestProvider = async (req, res) => {
+  const account = await Account.findOne({
+      include: [{model: Provider}]
+  });
+  console.log(account);
+  res.send(account);
 };
+
+export default {
+  createTestProvider,
+  getTestProvider
+}

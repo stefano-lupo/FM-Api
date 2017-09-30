@@ -6,6 +6,7 @@ import { TOKEN_EXPIRE_MINUTES } from '../constants/app';
 
 import models from '../models/';
 const Account = models.account;
+const Provider = models.provider;
 
 /**
  * POST /auth/register
@@ -34,6 +35,7 @@ const register = async (req, res) => {
  */
 const authWithFacebook = async (req, res, next) => {
   const { fbAccessToken } = req.body;
+  console.log(fbAccessToken);
   const fbAppId = req.app.get('fbAppId');
   const fbSecret = req.app.get('fbSecret');
   const jwtSecret = req.app.get('jwtSecret');
@@ -53,22 +55,30 @@ const authWithFacebook = async (req, res, next) => {
   }
 
   const facebookId = response.user_id;
-  let account = await Account.find({where: {facebookId}, attributes: ['id', 'firstName', 'lastName', 'email', 'facebookId']});
+  let account = await Account.findOne({
+    where: {facebookId},
+    attributes: ['id', 'firstName', 'lastName', 'email', 'facebookId'],
+    include: [{model: Provider}]
+  });
+
   if(!account) {
-    let response = await fetch(`https://graph.facebook.com/v2.10/me?fields=first_name%2Clast_name%2Cemail&access_token=${fbAccessToken}`);
-    response = await response.json();
+    console.log("Creating new account");
+    let response = await get(`https://graph.facebook.com/v2.10/me?fields=first_name%2Clast_name%2Cemail&access_token=${fbAccessToken}`);
     const firstName = response.first_name;
     const lastName = response.last_name;
     const { email } = response;
     account = await Account.create({firstName, lastName, email, facebookId});
+    account.dataValues.providers = [];
   }
+
+  console.log(account);
 
   const auth = {
     token: jwt.sign({data: account.id}, jwtSecret, {expiresIn: TOKEN_EXPIRE_MINUTES * 60}),
     expiresAt: moment().add(TOKEN_EXPIRE_MINUTES, 'm')
   };
-  account = account.get({plain: true});     // get standard JSON of rows
-  res.json({...account, auth});
+
+  res.json({...account.dataValues, auth});
 };
 
 module.exports = {
