@@ -3,6 +3,7 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import morgan from 'morgan';
 import jwt from 'jsonwebtoken';
+
 // Import Controllers
 import UserController from './controllers/UserController';
 import CategoryController from './controllers/CategoryController';
