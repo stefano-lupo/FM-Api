@@ -2,6 +2,7 @@ import db from '../models/';
 
 const Account = db.account;
 const Provider = db.provider;
+const Category = db.category;
 
 /*
   This script creates/re-creates all tables for the models

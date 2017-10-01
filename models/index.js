@@ -18,7 +18,7 @@ const db  = {};
 fs
   .readdirSync(__dirname)
   .filter((file) => {
-    return (file.indexOf(".") !== 0) && (( file === "Provider.js") || (file === "Account.js"));
+    return (file.indexOf(".") !== 0) && (( file === "Provider.js") || (file === "Account.js") || (file === "Category.js"));
   })
   .forEach((file) => {
   console.log("Parsing " + file);

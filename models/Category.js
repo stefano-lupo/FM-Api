@@ -1,14 +1,17 @@
-let mongoose = require('mongoose');
+export default function(sequelize, Sequelize) {
+  const Category = sequelize.define('category', {
+    id: {
+      type: Sequelize.UUID,
+      defaultValue: Sequelize.UUIDV1,
+      primaryKey: true
+    },
+    name: {
+      type: Sequelize.STRING,
+    },
+    belongsTo: {
+      type: Sequelize.UUID
+    }
+  });
 
-// Define fields
-let categorySchema = mongoose.Schema({
-  category: String,
-  subCategories: Array,
-});
-
-// Compile schema into model BEFORE compilation
-let Category = mongoose.model('Category', categorySchema);
-
-module.exports = {
-  Category
+  return Category;
 };

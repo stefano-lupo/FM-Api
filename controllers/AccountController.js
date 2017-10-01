@@ -1,8 +1,7 @@
-import jwt from 'jsonwebtoken';
 import moment from 'moment';
 
 import { get } from '../util/fetch';
-import { TOKEN_EXPIRE_MINUTES } from '../constants/app';
+import { generateToken } from '../util/generic';
 
 import models from '../models/';
 const Account = models.account;
@@ -38,7 +37,6 @@ const authWithFacebook = async (req, res, next) => {
   console.log(fbAccessToken);
   const fbAppId = req.app.get('fbAppId');
   const fbSecret = req.app.get('fbSecret');
-  const jwtSecret = req.app.get('jwtSecret');
   const url = `https://graph.facebook.com/v2.10/debug_token?input_token=${fbAccessToken}&access_token=${fbAppId}|${fbSecret}`;
 
   let response = {};
@@ -58,7 +56,10 @@ const authWithFacebook = async (req, res, next) => {
   let account = await Account.findOne({
     where: {facebookId},
     attributes: ['id', 'firstName', 'lastName', 'email', 'facebookId'],
-    include: [{model: Provider}]
+    include: [{
+      model: Provider,
+      attributes: ['id', 'name', 'thumbnail']
+    }]
   });
 
   if(!account) {
@@ -71,12 +72,7 @@ const authWithFacebook = async (req, res, next) => {
     account.dataValues.providers = [];
   }
 
-  console.log(account);
-
-  const auth = {
-    token: jwt.sign({data: account.id}, jwtSecret, {expiresIn: TOKEN_EXPIRE_MINUTES * 60}),
-    expiresAt: moment().add(TOKEN_EXPIRE_MINUTES, 'm')
-  };
+  const auth = generateToken(account.id);
 
   res.json({...account.dataValues, auth});
 };
