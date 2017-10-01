@@ -61,8 +61,11 @@ app.get('/users/me/jobs', (req, res) => UserController.getUsersJobs(req, res));
 
 app.get('/categories', (req, res) => CategoryController.getCategories(req, res));
 
+app.post('/provider', ProviderController.registerProvider);
+
 app.post('/jobs', (req, res) => JobController.requestJob(req, res));
 app.post('/jobs/:id/activate', (req, res) => JobController.activateJob(req, res));
+
 app.post('/jobs/:id/messages', (req, res) => MessageController.sendMessage(req, res));
 app.get('/jobs/:id/messages', (req, res) => MessageController.getMessages(req, res));
 

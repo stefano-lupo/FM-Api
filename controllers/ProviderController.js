@@ -25,6 +25,13 @@ const getTestProvider = async (req, res) => {
   res.send(account);
 };
 
+const registerProvider = async (req, res) => {
+  const providerDetails = req.body;
+  const provider = Provider.findOrCreate({
+    where: {name: req}
+  })
+};
+
 export default {
   createTestProvider,
   getTestProvider
